@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Work Dashboard New Tab",
+  "description": "Custom new tab dashboard",
+  "version": "1.0.0",
+
+  "chrome_url_overrides": {
+    "newtab": "dashboard/index.html"
+  },
+
+  "icons": {
+    "128": "dashboard/favicon.png"
+  }
+}

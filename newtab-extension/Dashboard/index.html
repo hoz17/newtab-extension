@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="icon" type="image/png" href="./favicon.png">
+
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <div class="dot"></div>
+            <div>
+                <div class="title">Welcome Back</div>
+                <div class="subtitle">Irinyan</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <input id="search" type="search" placeholder="Tìm nhanh…" autocomplete="off" />
+            <button id="btnAdd" class="btn">Thêm</button>
+            <button id="btnReset" class="btn btn-secondary" title="Khôi phục danh sách mặc định">Reset</button>
+        </div>
+    </header>
+    <nav class="chips" id="chips" aria-label="Nhóm"></nav>
+
+    <main class="container">
+        <section id="grid" class="grid" aria-label="Danh sách liên kết"></section>
+
+        <section class="hint" hidden>
+            <div class="hint-title">Gợi ý thumbnail</div>
+            <ul>
+                <li>Chụp screenshot trang → lưu vào thư mục <code>thumbs/</code> → đặt <code>thumb</code> là
+                    <code>./thumbs/tenfile.png</code>.
+                </li>
+                <li>Nếu không có <code>thumb</code>, hệ thống sẽ dùng favicon (cần internet).</li>
+            </ul>
+        </section>
+
+    </main>
+
+    <!-- Modal -->
+    <dialog id="modal" class="modal">
+        <form id="form" method="dialog" class="modal-card">
+            <div class="modal-head">
+                <div id="modalTitle" class="modal-title">Thêm website</div>
+                <button id="btnClose" class="icon-btn" value="cancel" aria-label="Đóng">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <label class="field">
+                    <div class="label">Tên</div>
+                    <input id="fName" required placeholder="Ví dụ: Jira" />
+                </label>
+
+                <label class="field">
+                    <div class="label">Link</div>
+                    <input id="fUrl" required placeholder="https://…" inputmode="url" />
+                </label>
+
+                <label class="field">
+                    <div class="label">Group</div>
+                    <input id="fGroup" placeholder="Ví dụ: Dev / PM / Admin" />
+                </label>
+
+                <label class="field">
+                    <div class="label">Thumbnail (tuỳ chọn)</div>
+                    <input id="fThumb" placeholder="./thumbs/jira.png" />
+                    <div class="help">Dùng đường dẫn tương đối. Ví dụ: <code>./thumbs/jira.png</code></div>
+                </label>
+            </div>
+
+            <div class="modal-foot">
+                <input type="hidden" id="fId" />
+                <button id="btnDelete" class="btn btn-danger" type="button">Xoá</button>
+                <div class="spacer"></div>
+                <button class="btn btn-secondary" value="cancel" type="button" id="btnCancel">Huỷ</button>
+                <button class="btn" value="default" type="submit">Lưu</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script src="./app.js"></script>
+</body>
+
+</html>
