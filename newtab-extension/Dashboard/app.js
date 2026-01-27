@@ -1,4 +1,7 @@
 const STORAGE_KEY = "newtab_dashboard_links_v1";
+const GROUP_ORDER_KEY = "dashboard_group_order_v1";
+
+const DEFAULT_GROUP = "Mặc định";
 
 const DEFAULT_LINKS = [
   { id: crypto.randomUUID(), name: "Gmail", url: "https://mail.google.com/", thumb: "./thumbs/gmail.png", group: "Admin" },
@@ -25,35 +28,25 @@ const fId = $("#fId");
 const fName = $("#fName");
 const fUrl = $("#fUrl");
 const fThumb = $("#fThumb");
+const fGroup = $("#fGroup");
+
+const chips = $("#chips");
 
 let dragId = null;
 
-const chips = document.querySelector("#chips");
-const fGroup = document.querySelector("#fGroup");
+/* -------------------- helpers -------------------- */
 
-let activeGroup = "Tất cả";
-const DEFAULT_GROUP = "Mặc định";
-
-
-function loadLinks() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const arr = raw ? JSON.parse(raw) : structuredClone(DEFAULT_LINKS);
-    if (!Array.isArray(arr)) return structuredClone(DEFAULT_LINKS);
-    return arr.map(x => ({
-      ...x,
-      group: (x.group && x.group.trim()) ? x.group.trim() : DEFAULT_GROUP
-    }));
-  } catch {
-    return structuredClone(DEFAULT_LINKS).map(x => ({
-      ...x,
-      group: x.group || DEFAULT_GROUP
-    }));
-  }
+function groupOf(x) {
+  const g = (x.group || "").trim();
+  return g ? g : DEFAULT_GROUP;
 }
 
-function saveLinks(links) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
+function slugify(s) {
+  return (s || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function hostnameOf(url) {
@@ -61,11 +54,6 @@ function hostnameOf(url) {
   catch { return ""; }
 }
 
-/**
- * Fallback favicon:
- * - Dùng dịch vụ favicon của Google (cần internet).
- * - Nếu bạn muốn offline hoàn toàn, hãy cung cấp thumb local.
- */
 function faviconUrl(url) {
   const host = hostnameOf(url);
   if (!host) return "";
@@ -75,69 +63,202 @@ function faviconUrl(url) {
 function normalizeUrl(u) {
   const t = (u || "").trim();
   if (!t) return "";
-  // Cho phép file://, http(s)://, chrome://, edge:// ... (nếu trình duyệt cho)
   if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(t)) return t;
-  // Nếu người dùng nhập "example.com" → thêm https://
   if (/^[\w.-]+\.[a-zA-Z]{2,}/.test(t)) return `https://${t}`;
   return t;
 }
 
+/* -------------------- storage: links -------------------- */
+
+function loadLinks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const arr = raw ? JSON.parse(raw) : structuredClone(DEFAULT_LINKS);
+    if (!Array.isArray(arr)) return structuredClone(DEFAULT_LINKS);
+    return arr.map(x => ({ ...x, group: groupOf(x) }));
+  } catch {
+    return structuredClone(DEFAULT_LINKS).map(x => ({ ...x, group: groupOf(x) }));
+  }
+}
+
+function saveLinks(links) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
+}
+
+/* -------------------- storage: group order -------------------- */
+
+function loadGroupOrder() {
+  try {
+    const raw = localStorage.getItem(GROUP_ORDER_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveGroupOrder(order) {
+  localStorage.setItem(GROUP_ORDER_KEY, JSON.stringify(order));
+}
+
+let groupOrder = loadGroupOrder();
+
+function syncGroupOrder(links) {
+  const existing = new Set(links.map(x => groupOf(x)));
+  if (!existing.has(DEFAULT_GROUP)) existing.add(DEFAULT_GROUP);
+
+  // giữ lại group còn tồn tại
+  groupOrder = groupOrder.filter(g => existing.has(g));
+
+  // thêm group mới vào cuối theo thứ tự xuất hiện
+  for (const x of links) {
+    const g = groupOf(x);
+    if (!groupOrder.includes(g)) groupOrder.push(g);
+  }
+
+  // đảm bảo DEFAULT_GROUP luôn có mặt
+  if (!groupOrder.includes(DEFAULT_GROUP)) groupOrder.push(DEFAULT_GROUP);
+
+  saveGroupOrder(groupOrder);
+}
+
+/* -------------------- UI: chips (scroll to group) -------------------- */
+
+function renderChips(links) {
+  if (!chips) return;
+
+  // dùng groupOrder để chips đúng thứ tự
+  chips.innerHTML = "";
+
+  const topBtn = document.createElement("button");
+  topBtn.className = "chip";
+  topBtn.type = "button";
+  topBtn.textContent = "Tất cả";
+  topBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  chips.appendChild(topBtn);
+
+  for (const g of groupOrder) {
+    const id = `group-${slugify(g)}`;
+
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.type = "button";
+    b.textContent = g;
+
+    b.addEventListener("click", () => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    chips.appendChild(b);
+  }
+}
+
+/* -------------------- group move up/down -------------------- */
+
+function moveGroup(name, dir) {
+  const i = groupOrder.indexOf(name);
+  if (i < 0) return;
+
+  const j = i + dir;
+  if (j < 0 || j >= groupOrder.length) return;
+
+  [groupOrder[i], groupOrder[j]] = [groupOrder[j], groupOrder[i]];
+  saveGroupOrder(groupOrder);
+
+  renderChips(links);
+  renderGrouped(links);
+}
+
+/* -------------------- render grouped -------------------- */
+
 function renderGrouped(links) {
   const q = (search.value || "").trim().toLowerCase();
 
-  // lọc theo search nhưng vẫn render theo group
   const view = !q
     ? links
     : links.filter(x =>
       (x.name || "").toLowerCase().includes(q) ||
-      (x.url || "").toLowerCase().includes(q)
+      (x.url || "").toLowerCase().includes(q) ||
+      groupOf(x).toLowerCase().includes(q)
     );
 
-  // gom theo group
-  const groups = new Map();
+  // group -> items
+  const grouped = new Map();
   for (const item of view) {
     const g = groupOf(item);
-    if (!groups.has(g)) groups.set(g, []);
-    groups.get(g).push(item);
+    if (!grouped.has(g)) grouped.set(g, []);
+    grouped.get(g).push(item);
   }
-
-  // đảm bảo group mặc định hiện (khi không search)
-  if (!q && !groups.has(DEFAULT_GROUP)) groups.set(DEFAULT_GROUP, []);
 
   grid.innerHTML = "";
 
-  for (const [groupName, items] of groups.entries()) {
-    // Section wrapper
+  for (const groupName of groupOrder) {
+    const items = grouped.get(groupName) || [];
+    if (q && items.length === 0) continue; // khi search, ẩn group rỗng
+
     const section = document.createElement("section");
     section.className = "group-section";
     section.id = `group-${slugify(groupName)}`;
 
-    // Header group
+    // header
     const header = document.createElement("div");
     header.className = "group-header";
+
+    const left = document.createElement("div");
+    left.className = "group-left";
 
     const title = document.createElement("div");
     title.className = "group-title";
     title.textContent = groupName;
+    left.appendChild(title);
+
+    const right = document.createElement("div");
+    right.className = "group-actions";
+
+    const upBtn = document.createElement("button");
+    upBtn.className = "group-move";
+    upBtn.type = "button";
+    upBtn.textContent = "↑";
+    upBtn.title = "Move group up";
+    upBtn.disabled = (groupOrder.indexOf(groupName) === 0);
+    upBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      moveGroup(groupName, -1);
+    });
+
+    const downBtn = document.createElement("button");
+    downBtn.className = "group-move";
+    downBtn.type = "button";
+    downBtn.textContent = "↓";
+    downBtn.title = "Move group down";
+    downBtn.disabled = (groupOrder.indexOf(groupName) === groupOrder.length - 1);
+    downBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      moveGroup(groupName, +1);
+    });
 
     const count = document.createElement("div");
     count.className = "group-count";
     count.textContent = `${items.length}`;
 
-    header.appendChild(title);
-    header.appendChild(count);
+    right.appendChild(upBtn);
+    right.appendChild(downBtn);
+    right.appendChild(count);
 
-    // Grid con
+    header.appendChild(left);
+    header.appendChild(right);
+
+    // subgrid
     const subgrid = document.createElement("div");
-    subgrid.className = "grid"; // reuse y hệt grid hiện có
+    subgrid.className = "grid";
 
     for (const item of items) {
-      // dùng lại đúng tile render cũ, chỉ thay chỗ append vào subgrid
       const tile = document.createElement("article");
       tile.className = "tile";
       tile.dataset.id = item.id;
 
-      // Drag&drop: để đơn giản, chỉ cho kéo khi KHÔNG search
+      // drag only when not searching (tránh reorder theo view lọc)
       tile.draggable = !q;
 
       tile.addEventListener("dragstart", (e) => {
@@ -180,6 +301,7 @@ function renderGrouped(links) {
         links.splice(toIndex, 0, moved);
 
         saveLinks(links);
+        syncGroupOrder(links);
         renderChips(links);
         renderGrouped(links);
       });
@@ -210,8 +332,8 @@ function renderGrouped(links) {
       const meta = document.createElement("div");
       meta.className = "meta";
 
-      const left = document.createElement("div");
-      left.style.minWidth = "0";
+      const leftMeta = document.createElement("div");
+      leftMeta.style.minWidth = "0";
 
       const name = document.createElement("div");
       name.className = "name";
@@ -221,8 +343,8 @@ function renderGrouped(links) {
       small.className = "small";
       small.textContent = hostnameOf(item.url) || item.url || "";
 
-      left.appendChild(name);
-      left.appendChild(small);
+      leftMeta.appendChild(name);
+      leftMeta.appendChild(small);
 
       const kebab = document.createElement("button");
       kebab.className = "kebab";
@@ -235,7 +357,7 @@ function renderGrouped(links) {
       });
       kebab.addEventListener("dragstart", (e) => e.preventDefault());
 
-      meta.appendChild(left);
+      meta.appendChild(leftMeta);
       meta.appendChild(kebab);
 
       a.appendChild(thumbWrap);
@@ -251,26 +373,7 @@ function renderGrouped(links) {
   }
 }
 
-
-let links = loadLinks();
-renderChips(links);
-renderGrouped(links);
-
-search.addEventListener("input", () => {
-  renderGrouped(links);
-});
-
-btnReset.addEventListener("click", () => {
-  links = structuredClone(DEFAULT_LINKS);
-  saveLinks(links);
-  renderChips(links);
-  renderGrouped(links);
-});
-
-btnAdd.addEventListener("click", () => openAdd());
-
-btnCancel.addEventListener("click", () => modal.close("cancel"));
-$("#btnClose").addEventListener("click", () => modal.close("cancel"));
+/* -------------------- modal add/edit -------------------- */
 
 function openAdd() {
   modalTitle.textContent = "Thêm website";
@@ -296,88 +399,60 @@ function openEdit(item) {
   fName.focus();
 }
 
+/* -------------------- init + events -------------------- */
+
+let links = loadLinks();
+syncGroupOrder(links);
+renderChips(links);
+renderGrouped(links);
+
+search.addEventListener("input", () => renderGrouped(links));
+
+btnReset.addEventListener("click", () => {
+  links = structuredClone(DEFAULT_LINKS).map(x => ({ ...x, group: groupOf(x) }));
+  saveLinks(links);
+  syncGroupOrder(links);
+  renderChips(links);
+  renderGrouped(links);
+});
+
+btnAdd.addEventListener("click", () => openAdd());
+
+btnCancel.addEventListener("click", () => modal.close("cancel"));
+$("#btnClose").addEventListener("click", () => modal.close("cancel"));
+
 btnDelete.addEventListener("click", () => {
   const id = fId.value;
   if (!id) return;
+
   links = links.filter(x => x.id !== id);
   saveLinks(links);
+
   modal.close("deleted");
+  syncGroupOrder(links);
   renderChips(links);
   renderGrouped(links);
 });
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
+
   const id = fId.value || crypto.randomUUID();
   const name = (fName.value || "").trim();
   const url = normalizeUrl(fUrl.value);
   const thumb = (fThumb.value || "").trim();
   const group = (fGroup.value || "").trim() || DEFAULT_GROUP;
+
   const updated = { id, name, url, thumb, group };
+
   const idx = links.findIndex(x => x.id === id);
   if (idx >= 0) links[idx] = updated;
   else links.unshift(updated);
 
   saveLinks(links);
+
   modal.close("saved");
+  syncGroupOrder(links);
   renderChips(links);
   renderGrouped(links);
 });
-
-function getGroups(links) {
-  const set = new Set([DEFAULT_GROUP]);
-  for (const x of links) {
-    const g = (x.group || "").trim() || DEFAULT_GROUP;
-    set.add(g);
-  }
-
-  return ["Tất cả", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
-}
-function getGroupsInOrder(links) {
-  const map = new Map(); // giữ thứ tự xuất hiện
-  for (const x of links) map.set(groupOf(x), true);
-  if (!map.has(DEFAULT_GROUP)) map.set(DEFAULT_GROUP, true);
-  return Array.from(map.keys());
-}
-function renderChips(links) {
-  if (!chips) return;
-
-  const groups = getGroupsInOrder(links);
-  chips.innerHTML = "";
-
-  // nút "Lên đầu"
-  const topBtn = document.createElement("button");
-  topBtn.className = "chip";
-  topBtn.type = "button";
-  topBtn.textContent = "Tất cả";
-  topBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-  chips.appendChild(topBtn);
-
-  for (const g of groups) {
-    const id = `group-${slugify(g)}`;
-    const b = document.createElement("button");
-    b.className = "chip";
-    b.type = "button";
-    b.textContent = g;
-
-    b.addEventListener("click", () => {
-      const el = document.getElementById(id);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-
-    chips.appendChild(b);
-  }
-}
-
-function groupOf(x) {
-  const g = (x.group || "").trim();
-  return g ? g : DEFAULT_GROUP;
-}
-
-function slugify(s) {
-  return (s || "")
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // bỏ dấu
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
