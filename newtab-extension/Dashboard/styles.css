@@ -144,7 +144,7 @@ body {
 
 .container {
   padding: 18px 20px 40px;
-  max-width: 1700px;
+  max-width: 1680px;
   margin: 0 auto;
 }
 
@@ -348,7 +348,7 @@ body {
   gap: 10px;
   flex-wrap: wrap;
   padding: 10px 20px 0;
-  max-width: 1700px;
+  max-width: 1680px;
   margin: 0 auto;
 }
 
