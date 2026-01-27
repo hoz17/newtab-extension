@@ -1,124 +1,127 @@
-🧭 New Tab Dashboard
+# 🧭 New Tab Dashboard
 
-A clean, fast, and fully offline New Tab Dashboard for Chromium-based browsers.
+A clean, fast, and fully offline **New Tab Dashboard** for Chromium-based browsers.  
 Designed for productivity with grouped links, drag & drop, and custom thumbnails — no server required.
 
-📸 Screenshot
+---
+
+## 📸 Screenshot
 
 (Add your screenshot here)
 
 screenshots/dashboard.png
 
-✨ Features
+Example:
 
-Quick access links displayed as visual cards
+![Dashboard Screenshot](screenshots/dashboard.png)
 
-Groups with custom ordering (move up / down)
+---
 
-Drag & drop to reorder links
+## ✨ Features
 
-Custom thumbnails (local images or favicon fallback)
+- Quick access links displayed as visual cards
+- Groups with custom ordering (move up / down)
+- Drag & drop to reorder links
+- Custom thumbnails (local images or favicon fallback)
+- Uniform card size for a clean layout
+- Instant search across name, URL, and group
+- Persistent storage using localStorage
+- Dark UI optimized for daily use
+- No server, no build step – runs directly from files
+- Works as a New Tab browser extension
 
-Uniform card size for a clean layout
+---
 
-Instant search across name, URL, and group
+## 🚀 Installation (Developer Mode)
 
-Persistent storage using localStorage
+1. Download or clone this repository  
+   Place it anywhere on your machine.
 
-Dark UI optimized for daily use
+2. Open your browser and go to:  
+   Settings → Extensions → Manage Extensions
 
-No server, no build step – runs directly from files
+3. Enable **Developer mode** (top right).
 
-Works as a New Tab browser extension
+4. Click **Load unpacked**.
 
-🚀 Installation (Developer Mode)
-
-Download or clone this repository
-Place it anywhere on your machine.
-
-Open your browser and go to:
-Settings → Extensions → Manage Extensions
-
-Enable Developer mode (top right).
-
-Click Load unpacked.
-
-Select the repository folder.
+5. Select the repository folder.
 
 Done! Open a new tab to see the dashboard.
 
-📁 Project Structure
+---
 
-newtab-dashboard
-├─ index.html (Main New Tab page)
-├─ styles.css (Global styles & layout)
-├─ app.js (Application logic)
-├─ manifest.json (Extension configuration)
-├─ thumbs/ (Local thumbnail images)
-│ ├─ gmail.png
-│ ├─ notion.png
-│ └─ ...
-├─ icons/ (Extension icons)
-│ ├─ icon16.png
-│ ├─ icon32.png
-│ ├─ icon48.png
-│ └─ icon128.png
-└─ screenshots/
-└─ dashboard.png
+## 📁 Project Structure
+```
+newtab-dashboard/
+├── index.html # Main New Tab page
+├── styles.css # Global styles & layout
+├── app.js # Application logic
+├── manifest.json # Extension configuration
+├── thumbs/ # Local thumbnail images
+│ ├── gmail.png
+│ ├── notion.png
+│ └── ...
+├── icons/ # Extension icons
+│ ├── icon16.png
+│ ├── icon32.png
+│ ├── icon48.png
+│ └── icon128.png
+└── screenshots/
+└── dashboard.png
+```
 
-🧠 How It Works
+---
 
-All links and settings are stored in browser localStorage
+## 🧠 How It Works
 
-Group order is stored separately to preserve layout
+- All links and settings are stored in browser `localStorage`
+- Group order is stored separately to preserve layout
+- No backend, no database, no external services required
+- Clicking a card replaces the current tab (no new tab spam)
 
-No backend, no external services required
+---
 
-Clicking a card replaces the current tab (no new tab spam)
-
-🛣 Roadmap
+## 🛣 Roadmap
 
 Planned improvements:
 
-Drag & drop between groups
+- [ ] Drag & drop between groups
+- [ ] Collapse / expand groups
+- [ ] Import / export configuration (JSON)
+- [ ] Keyboard shortcuts
+- [ ] Optional sync using browser storage
+- [ ] Firefox support
 
-Collapse / expand groups
+---
 
-Import / export configuration (JSON)
+## ❓ FAQ
 
-Keyboard shortcuts
-
-Optional sync using browser storage
-
-Firefox support
-
-❓ FAQ
-
-Q: Does this require a server or hosting?
+**Q: Does this require a server or hosting?**  
 A: No. Everything runs locally in the browser.
 
-Q: Where is my data stored?
-A: In the browser’s localStorage.
+**Q: Where is my data stored?**  
+A: In the browser’s `localStorage`.
 
-Q: Can I use local images as thumbnails?
-A: Yes. You can reference files in the thumbs folder or use image data URLs.
+**Q: Can I use local images as thumbnails?**  
+A: Yes. You can reference files in the `thumbs/` folder or use image data URLs.
 
-Q: Can the New Tab page have a favicon?
+**Q: Can the New Tab page have a favicon?**  
 A: No. Chrome does not support favicons for overridden New Tab pages.
 
-Q: Will this slow down my browser?
-A: No. The dashboard is lightweight and only loads on new tab.
+**Q: Will this slow down my browser?**  
+A: No. The dashboard is lightweight and only loads when opening a new tab.
 
-🧩 Browser Compatibility
+---
 
-Chrome
+## 🧩 Browser Compatibility
 
-Edge
+- Chrome
+- Edge
+- Brave
+- Firefox (requires adjustments)
 
-Brave
+---
 
-Firefox (requires adjustments)
-
-📜 License
+## 📜 License
 
 MIT License — free to use, modify, and distribute.
