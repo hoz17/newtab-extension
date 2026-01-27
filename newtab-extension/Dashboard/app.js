@@ -308,8 +308,6 @@ function renderGrouped(links) {
 
       const a = document.createElement("a");
       a.href = item.url;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
 
       const thumbWrap = document.createElement("div");
       thumbWrap.className = "thumb";
