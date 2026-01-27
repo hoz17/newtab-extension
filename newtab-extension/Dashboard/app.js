@@ -4,11 +4,8 @@ const GROUP_ORDER_KEY = "dashboard_group_order_v1";
 const DEFAULT_GROUP = "Mặc định";
 
 const DEFAULT_LINKS = [
-  { id: crypto.randomUUID(), name: "Gmail", url: "https://mail.google.com/", thumb: "./thumbs/gmail.png", group: "Admin" },
-  { id: crypto.randomUUID(), name: "Google Calendar", url: "https://calendar.google.com/", thumb: "./thumbs/calendar.png", group: "Admin" },
-  { id: crypto.randomUUID(), name: "Notion", url: "https://www.notion.so/", thumb: "./thumbs/notion.png", group: "PM" },
-  { id: crypto.randomUUID(), name: "Jira", url: "https://www.atlassian.com/software/jira", thumb: "./thumbs/jira.png", group: "PM" },
-  { id: crypto.randomUUID(), name: "Slack", url: "https://app.slack.com/client", thumb: "./thumbs/slack.png", group: "Team" }
+  { id: crypto.randomUUID(), name: "Facebook", url: "https://facebook.com/", thumb: "./thumbs/facebook.png", group: "" },
+  { id: crypto.randomUUID(), name: "Youtube", url: "https://youtube.com/", thumb: "./thumbs/youtube.png", group: "" },
 ];
 
 const $ = (sel) => document.querySelector(sel);
