@@ -41,23 +41,9 @@ body {
     "Apple Color Emoji",
     "Segoe UI Emoji";
   color: var(--text);
-  background:
-    radial-gradient(
-      1200px 600px at 15% 0%,
-      rgba(110, 168, 254, 0.18),
-      transparent 60%
-    ),
-    radial-gradient(
-      1000px 600px at 90% 15%,
-      rgba(255, 127, 80, 0.14),
-      transparent 55%
-    ),
-    radial-gradient(
-      900px 600px at 50% 100%,
-      rgba(160, 255, 197, 0.1),
-      transparent 55%
-    ),
-    var(--bg);
+  background: var(--bg);
+  position: relative;
+  overflow-x: hidden;
 }
 
 .topbar {
@@ -385,9 +371,27 @@ body {
   background: rgba(96, 165, 250, 0.18);
 }
 .group-section {
-  margin-top: 14px;
+  flex: 0 0 360px; /* đổi 320–420 tuỳ thích */
+  scroll-snap-align: start;
+  margin-top: 18px;
 }
-
+/* 3) Grid bên trong mỗi group: 1 cột (stack dọc) */
+.group-section .grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+/* (tuỳ chọn) thanh cuộn ngang đẹp hơn */
+#grid::-webkit-scrollbar {
+  height: 10px;
+}
+#grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+}
+#grid::-webkit-scrollbar-track {
+  background: transparent;
+}
 .group-header {
   display: flex;
   align-items: center;
@@ -408,4 +412,84 @@ body {
   background: rgba(255, 255, 255, 0.06);
   padding: 4px 10px;
   border-radius: 999px;
+}
+#grid {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-top: 8px;
+  scroll-snap-type: x proximity;
+}
+/* ===== FIX LAYOUT: mỗi group = 1 dòng, item wrap ===== */
+
+/* 1) container chính không còn dạng kanban ngang */
+#grid {
+  display: block;
+  overflow: visible;
+  scroll-snap-type: none;
+  padding-bottom: 0;
+}
+
+/* 2) mỗi group là 1 section theo chiều dọc */
+.group-section {
+  flex: none; /* vô hiệu flex-basis cũ */
+  width: 100%;
+  margin-top: 18px;
+  scroll-snap-align: none;
+}
+
+/* 3) bên trong group: item xếp ngang và tự xuống dòng */
+.group-section .grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+/* 4) mỗi tile có min-width để wrap đẹp (tự co giãn) */
+.group-section .tile {
+  flex: 1 1 240px; /* min width ~240px */
+  max-width: 320px; /* giới hạn để không quá to */
+}
+
+/* 5) bỏ style scrollbar ngang (không cần nữa) */
+#grid::-webkit-scrollbar {
+  height: 0;
+}
+/* Fixed background layer (không cuộn theo nội dung) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      1200px 600px at 15% 0%,
+      rgba(110, 168, 254, 0.18),
+      transparent 60%
+    ),
+    radial-gradient(
+      1000px 600px at 90% 15%,
+      rgba(255, 127, 80, 0.14),
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 600px at 50% 100%,
+      rgba(160, 255, 197, 0.1),
+      transparent 55%
+    ),
+    var(--bg);
+
+  /* quan trọng: cố định theo viewport */
+  background-attachment: fixed;
+}
+/* Mỗi tile cùng kích thước */
+.group-section .tile{
+  flex: 0 0 260px;        /* width cố định */
+  height: 220px;         /* height cố định */
+  display: flex;
+  flex-direction: column;
 }
