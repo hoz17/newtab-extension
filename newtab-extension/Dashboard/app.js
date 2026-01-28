@@ -451,3 +451,68 @@ form.addEventListener("submit", (e) => {
   renderChips(links);
   renderGrouped(links);
 });
+const btnExport = document.querySelector("#btnExport");
+const btnImport = document.querySelector("#btnImport");
+const importFile = document.querySelector("#importFile");
+
+btnExport.addEventListener("click", () => {
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    links,
+    groupOrder
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(data, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "newtab-dashboard-backup.json";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+btnImport.addEventListener("click", () => {
+  importFile.value = "";
+  importFile.click();
+});
+
+importFile.addEventListener("change", async () => {
+  const file = importFile.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+
+    if (!Array.isArray(data.links)) {
+      alert("Invalid backup file");
+      return;
+    }
+
+    links = data.links.map(x => ({
+      ...x,
+      id: x.id || crypto.randomUUID(),
+      group: (x.group || DEFAULT_GROUP).trim()
+    }));
+
+    groupOrder = Array.isArray(data.groupOrder)
+      ? data.groupOrder
+      : [];
+
+    saveLinks(links);
+    saveGroupOrder(groupOrder);
+    syncGroupOrder(links);
+
+    renderChips(links);
+    renderGrouped(links);
+
+    alert("Import successful");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to import file");
+  }
+});

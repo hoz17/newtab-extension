@@ -50,6 +50,27 @@ Done! Open a new tab to see the dashboard.
 
 ---
 
+## 📤 Export / Import Data
+
+You can backup or transfer your dashboard data easily.
+
+### Export
+- Click **Export**
+- A JSON backup file will be downloaded
+- Includes:
+  - All links
+  - Group names & order
+  - Metadata
+
+### Import
+- Click **Import**
+- Select a previously exported JSON file
+- Existing data will be replaced
+
+⚠️ Import will overwrite current data.
+
+---
+
 ## 📁 Project Structure
 ```
 newtab-dashboard/
