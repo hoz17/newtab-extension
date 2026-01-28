@@ -7,13 +7,7 @@ Designed for productivity with grouped links, drag & drop, and custom thumbnails
 
 ## 📸 Screenshot
 
-(Add your screenshot here)
-
-screenshots/dashboard.png
-
-Example:
-
-![Dashboard Screenshot](screenshots/dashboard.png)
+![Dashboard Screenshot](res/screenshot.png)
 
 ---
 
