@@ -102,7 +102,7 @@ Planned improvements:
 
 - [ ] Drag & drop between groups
 - [ ] Collapse / expand groups
-- [✅] Import / export configuration (JSON)
+- [x] Import / export configuration (JSON)
 - [ ] Keyboard shortcuts
 - [ ] Optional sync using browser storage
 - [ ] Firefox support
