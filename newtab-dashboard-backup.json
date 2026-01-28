@@ -1,0 +1,250 @@
+{
+  "version": 1,
+  "exportedAt": "2026-01-28T08:10:32.417Z",
+  "links": [
+    {
+      "id": "79407fba-d2c8-4805-856c-a527f442a3a3",
+      "name": "Youtube",
+      "url": "https://youtube.com",
+      "thumb": "./thumbs/youtube.png",
+      "group": "Mặc định"
+    },
+    {
+      "id": "25b5d753-dbe8-44ed-9db4-af4cb9f70c3f",
+      "name": "ChatGPT",
+      "url": "https://chatgpt.com/",
+      "thumb": "",
+      "group": "Mặc định"
+    },
+    {
+      "id": "2bc286cd-8f03-4bfb-8739-cde031e27e59",
+      "name": "Facebook",
+      "url": "https://facebook.com",
+      "thumb": "./thumbs/facebook.png",
+      "group": "Mặc định"
+    },
+    {
+      "id": "799616d2-bc5d-4133-a188-f53fdbb03acb",
+      "name": "Gmail tapbrain",
+      "url": "https://mail.google.com/mail/u/7/#inbox",
+      "thumb": "./thumbs/gmail.webp",
+      "group": "Mặc định"
+    },
+    {
+      "id": "ef0cdd52-7997-4559-baea-1e094c158723",
+      "name": "Gmail sonnguyenvan9902",
+      "url": "https://mail.google.com/mail/u/0/#inbox",
+      "thumb": "./thumbs/gmail.webp",
+      "group": "Mặc định"
+    },
+    {
+      "id": "c6b2910e-8b51-49ba-bc17-c40f9e74f424",
+      "name": "Gmail sn992002",
+      "url": "https://mail.google.com/mail/u/1/#inbox",
+      "thumb": "./thumbs/gmail.webp",
+      "group": "Mặc định"
+    },
+    {
+      "id": "ae55604b-a67f-4be1-aafe-b458a8979bbe",
+      "name": "MCdle",
+      "url": "https://www.mcdle.net/",
+      "thumb": "./thumbs/mcdle.jpg",
+      "group": "Game"
+    },
+    {
+      "id": "d819d572-9c79-4c65-9d61-550289247491",
+      "name": "LoLdle",
+      "url": "https://loldle.net/",
+      "thumb": "./thumbs/loldle.png",
+      "group": "Game"
+    },
+    {
+      "id": "13ad7d13-cd3f-414f-a178-70ef3018e598",
+      "name": "Drive Test Session",
+      "url": "https://drive.google.com/drive/u/6/folders/10My0K_cOPfQIXwRui6tF77q2O1PlFRHJ",
+      "thumb": "./thumbs/drive.png",
+      "group": "Mặc định"
+    },
+    {
+      "id": "8e6e0572-c54b-4d24-b801-4e2791f81605",
+      "name": "Google Play Console",
+      "url": "https://play.google.com/console/u/7/developers",
+      "thumb": "./thumbs/play.png",
+      "group": "Mặc định"
+    },
+    {
+      "id": "97ce2668-c80e-450a-8214-498bf7d58623",
+      "name": "Appstore Connect",
+      "url": "https://appstoreconnect.apple.com/",
+      "thumb": "./thumbs/appstore.png",
+      "group": "Mặc định"
+    },
+    {
+      "id": "bc83e432-7b9f-4a6f-9568-15867d6e0628",
+      "name": "Feedback Word Relax",
+      "url": "https://trello.com/b/Wf14Ta2q",
+      "thumb": "./thumbs/wr.png",
+      "group": "Feedback"
+    },
+    {
+      "id": "55ba9eb4-351f-4df3-bbe4-36ed5f49c49b",
+      "name": "Feedback Word Cross",
+      "url": "https://trello.com/b/bxygMj8B",
+      "thumb": "./thumbs/wc.png",
+      "group": "Feedback"
+    },
+    {
+      "id": "094b7a4b-e367-4765-b64b-c3b43516efa3",
+      "name": "Feedback World Of Wonders",
+      "url": "https://trello.com/b/cfP34gr3",
+      "thumb": "./thumbs/wow.png",
+      "group": "Feedback"
+    },
+    {
+      "id": "9eac1d32-8799-4d9c-9599-d29fd741f1a7",
+      "name": "Feedback Word Trip",
+      "url": "https://trello.com/b/xLSag5SJ",
+      "thumb": "./thumbs/wt.png",
+      "group": "Feedback"
+    },
+    {
+      "id": "74609818-6f82-480e-9050-67bc9e2872af",
+      "name": "Feedback Zenscapes",
+      "url": "https://trello.com/b/R517Iid6",
+      "thumb": "./thumbs/zs.png",
+      "group": "Feedback"
+    },
+    {
+      "id": "bfaa007a-8c53-42cb-9bda-f4179ec47c44",
+      "name": "Feedback FigureIt",
+      "url": "https://trello.com/b/bDq5A3qI",
+      "thumb": "./thumbs/fig.png",
+      "group": "Feedback"
+    },
+    {
+      "id": "c6e1b840-cd88-4110-9ca3-3df67c59eb6e",
+      "name": "Feedback Word Code",
+      "url": "https://trello.com/b/SKPZUgzR",
+      "thumb": "./thumbs/wcd.png",
+      "group": "Feedback"
+    },
+    {
+      "id": "f2ddb54f-80b3-439a-9780-cc10b0722378",
+      "name": "Feedback Relax Solitaire Association",
+      "url": "https://trello.com/b/rNO9hKhw",
+      "thumb": "",
+      "group": "Feedback"
+    },
+    {
+      "id": "aa9944f0-965d-403f-a501-405dd8bf2e3b",
+      "name": "Dev Word Relax",
+      "url": "https://trello.com/b/sPBPiikg",
+      "thumb": "./thumbs/wr.png",
+      "group": "Dev"
+    },
+    {
+      "id": "c0a45fe0-4ff5-4a37-b795-ac92e73be651",
+      "name": "Dev Word Cross",
+      "url": "https://trello.com/b/ymsVcey1",
+      "thumb": "./thumbs/wc.png",
+      "group": "Dev"
+    },
+    {
+      "id": "6c8afd67-a00e-4761-acf7-0d6895a1ae8a",
+      "name": "Dev Zenscapes",
+      "url": "https://trello.com/b/QS6cM4Ao",
+      "thumb": "./thumbs/zs.png",
+      "group": "Dev"
+    },
+    {
+      "id": "332a6da9-ac42-4299-a9d2-0b8968eb5835",
+      "name": "Dev World Of Wonders",
+      "url": "https://trello.com/b/dyd3WSsT",
+      "thumb": "./thumbs/wow.png",
+      "group": "Dev"
+    },
+    {
+      "id": "1799e5d5-8b07-4640-b587-55352d83d0e2",
+      "name": "Dev Word Trip",
+      "url": "https://trello.com/b/wCT6sP7l",
+      "thumb": "./thumbs/wt.png",
+      "group": "Dev"
+    },
+    {
+      "id": "3195b486-112b-4169-abd3-4745b7f51b2e",
+      "name": "Dev Word Code",
+      "url": "https://trello.com/b/jeG5kuBG",
+      "thumb": "./thumbs/wcd.png",
+      "group": "Dev"
+    },
+    {
+      "id": "690d26a6-505d-400d-b874-1f07bcecd32d",
+      "name": "Dev FigureIt",
+      "url": "https://trello.com/b/1fS8gN9O",
+      "thumb": "./thumbs/fig.png",
+      "group": "Dev"
+    },
+    {
+      "id": "155a1607-9787-44ba-8b50-a46041951b4d",
+      "name": "Dev Zen Solitaire Word Association",
+      "url": "https://trello.com/c/Ds6a8FJB",
+      "thumb": "./thumbs/zsw.png",
+      "group": "Dev"
+    },
+    {
+      "id": "31d2c120-6e7e-45aa-959d-9b238a2920d9",
+      "name": "Dev Relax Solitaire Association",
+      "url": "https://trello.com/b/0gdZsvdg",
+      "thumb": "",
+      "group": "Dev"
+    },
+    {
+      "id": "f3aedb79-aa77-4744-afb9-68586b4c8cd7",
+      "name": "Dev Picture Merge",
+      "url": "https://trello.com/b/1zythGye",
+      "thumb": "",
+      "group": "Dev"
+    },
+    {
+      "id": "4c54d525-eeef-4152-93ca-ab4c2e8ad24e",
+      "name": "Firebase",
+      "url": "https://console.firebase.google.com/u/7/",
+      "thumb": "./thumbs/firebase.png",
+      "group": "Mặc định"
+    },
+    {
+      "id": "d5d6ce65-bac6-49f9-b71d-28e76ec038ae",
+      "name": "Gemini",
+      "url": "https://gemini.google.com/",
+      "thumb": "./thumbs/gemini.png",
+      "group": "Mặc định"
+    },
+    {
+      "id": "cf9a6ffd-f8e7-40e5-9f94-835171d1ea00",
+      "name": "LinkedIn",
+      "url": "https://www.linkedin.com",
+      "thumb": "./thumbs/linkedin.png",
+      "group": "Mặc định"
+    },
+    {
+      "id": "5cd7958d-31e8-4e5e-8cc1-a7de0f4906a1",
+      "name": "Dev Merge House",
+      "url": "https://trello.com/b/BrfA4msi",
+      "thumb": "./thumbs/mh.png",
+      "group": "Dev"
+    },
+    {
+      "id": "f1a1f90c-4b02-4c46-89f3-09cabb8c643a",
+      "name": "Dev Mots Cookie",
+      "url": "https://trello.com/b/wppAEbiN",
+      "thumb": "./thumbs/mc.png",
+      "group": "Dev"
+    }
+  ],
+  "groupOrder": [
+    "Dev",
+    "Mặc định",
+    "Game",
+    "Feedback"
+  ]
+}
