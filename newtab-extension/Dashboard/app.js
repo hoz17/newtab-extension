@@ -28,6 +28,8 @@ const fThumb = $("#fThumb");
 const fGroup = $("#fGroup");
 
 const chips = $("#chips");
+const clockTime = $("#clockTime");
+const clockDate = $("#clockDate");
 
 let dragId = null;
 
@@ -63,6 +65,34 @@ function normalizeUrl(u) {
   if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(t)) return t;
   if (/^[\w.-]+\.[a-zA-Z]{2,}/.test(t)) return `https://${t}`;
   return t;
+}
+
+/* -------------------- clock -------------------- */
+
+function startClock() {
+  if (!clockTime && !clockDate) return;
+
+  const timeFormat = new Intl.DateTimeFormat("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+  const dateFormat = new Intl.DateTimeFormat("vi-VN", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
+  const update = () => {
+    const now = new Date();
+    if (clockTime) clockTime.textContent = timeFormat.format(now);
+    if (clockDate) clockDate.textContent = dateFormat.format(now);
+  };
+
+  update();
+  setInterval(update, 1000);
 }
 
 /* -------------------- storage: links -------------------- */
@@ -400,6 +430,7 @@ let links = loadLinks();
 syncGroupOrder(links);
 renderChips(links);
 renderGrouped(links);
+startClock();
 
 search.addEventListener("input", () => renderGrouped(links));
 
