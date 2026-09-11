@@ -58,3 +58,6 @@ $RECYCLE.BIN/
 
 # Dashboard thumbnails (local/personal)
 Dashboard/thumbs/
+
+# Dashboard background images (local/personal)
+Dashboard/background/

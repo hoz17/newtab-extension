@@ -60,18 +60,17 @@ body {
     rgba(11, 15, 23, 0.55)
   );
   border-bottom: 1px solid var(--border);
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) auto minmax(170px, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   padding: 14px 20px;
   position: sticky;
 }
 
 .clock {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  grid-column: 2;
+  justify-self: center;
   min-width: 180px;
   pointer-events: none;
 }
@@ -156,7 +155,9 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: min(780px, 100%);
+  width: 100%;
+  max-width: 780px;
+  justify-self: end;
   justify-content: flex-end;
 }
 #search {
@@ -700,4 +701,85 @@ body::before {
 }
 .group-section .small{
   max-width: 100% !important;
+}
+
+/* ===== Custom background ===== */
+:root {
+  --bg-dim: 0.35; /* độ tối lớp phủ khi có nền tuỳ chỉnh */
+  --bg-blur: 0px; /* độ mờ ảnh nền */
+}
+
+#bgLayer,
+#bgVideo {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  filter: blur(var(--bg-blur));
+  transform: scale(1.04); /* che mép trắng khi blur */
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+#bgLayer {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#bgVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+body.has-custom-bg:not(.bg-is-video) #bgLayer {
+  opacity: 1;
+}
+
+body.has-custom-bg.bg-is-video #bgVideo {
+  opacity: 1;
+}
+
+/* khi có nền tuỳ chỉnh: thay gradient bằng lớp phủ tối để chữ dễ đọc */
+body.has-custom-bg::before {
+  background: linear-gradient(
+    to bottom,
+    rgba(2, 6, 23, calc(var(--bg-dim) * 0.85)),
+    rgba(2, 6, 23, var(--bg-dim))
+  );
+  background-attachment: fixed;
+}
+
+.bg-preview {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background-color: rgba(255, 255, 255, 0.06);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.bg-preview video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.field input[type="range"] {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  accent-color: var(--accent);
 }

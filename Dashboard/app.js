@@ -624,3 +624,155 @@ importFile.addEventListener("change", async () => {
     alert("Failed to import file");
   }
 });
+
+/* -------------------- background (ảnh / gif / video theo đường dẫn) -------------------- */
+
+const BG_KEY = "dashboard_background_v1";
+const VIDEO_RE = /\.(mp4|webm|ogv|ogg|mov|m4v)$/i;
+
+function isVideoPath(p) {
+  return VIDEO_RE.test((p || "").trim());
+}
+
+function loadBgSettings() {
+  try {
+    const raw = localStorage.getItem(BG_KEY);
+    const s = raw ? JSON.parse(raw) : null;
+    return { path: "", dim: 35, blur: 0, ...(s || {}) };
+  } catch {
+    return { path: "", dim: 35, blur: 0 };
+  }
+}
+
+function saveBgSettings(s) {
+  localStorage.setItem(BG_KEY, JSON.stringify(s));
+}
+
+function applyBackground() {
+  const s = loadBgSettings();
+  const bgLayer = $("#bgLayer");
+  const bgVideo = $("#bgVideo");
+  if (!bgLayer || !bgVideo) return;
+
+  document.documentElement.style.setProperty("--bg-dim", (s.dim / 100).toString());
+  document.documentElement.style.setProperty("--bg-blur", `${s.blur}px`);
+
+  const path = (s.path || "").trim();
+
+  if (!path) {
+    document.body.classList.remove("has-custom-bg", "bg-is-video");
+    bgLayer.style.backgroundImage = "";
+    bgVideo.removeAttribute("src");
+    bgVideo.load();
+    return;
+  }
+
+  document.body.classList.add("has-custom-bg");
+
+  if (isVideoPath(path)) {
+    document.body.classList.add("bg-is-video");
+    bgLayer.style.backgroundImage = "";
+    if (bgVideo.getAttribute("src") !== path) bgVideo.src = path;
+    bgVideo.muted = true; // luôn tắt tiếng
+    bgVideo.play().catch(() => {}); // autoplay có thể bị hoãn tới khi tab hiển thị
+  } else {
+    document.body.classList.remove("bg-is-video");
+    bgVideo.removeAttribute("src");
+    bgVideo.load();
+    bgLayer.style.backgroundImage = `url("${path}")`;
+  }
+}
+
+/* -------------------- UI: background modal -------------------- */
+
+const bgModal = $("#bgModal");
+const bgForm = $("#bgForm");
+const bgPath = $("#bgPath");
+const bgDim = $("#bgDim");
+const bgBlur = $("#bgBlur");
+const bgDimVal = $("#bgDimVal");
+const bgBlurVal = $("#bgBlurVal");
+const bgPreview = $("#bgPreview");
+const btnBg = $("#btnBg");
+
+function setBgPreview(path) {
+  bgPreview.innerHTML = "";
+  bgPreview.style.backgroundImage = "";
+  const p = (path || "").trim();
+
+  if (!p) {
+    bgPreview.textContent = "Chưa có ảnh nền";
+    return;
+  }
+
+  if (isVideoPath(p)) {
+    const v = document.createElement("video");
+    v.src = p;
+    v.muted = true;
+    v.loop = true;
+    v.autoplay = true;
+    v.playsInline = true;
+    v.play().catch(() => {});
+    bgPreview.appendChild(v);
+  } else {
+    bgPreview.style.backgroundImage = `url("${p}")`;
+  }
+}
+
+function openBgModal() {
+  const s = loadBgSettings();
+  bgDim.value = s.dim;
+  bgBlur.value = s.blur;
+  bgDimVal.textContent = `${s.dim}%`;
+  bgBlurVal.textContent = `${s.blur}px`;
+  bgPath.value = s.path || "";
+  setBgPreview(s.path);
+  bgModal.showModal();
+}
+
+btnBg.addEventListener("click", openBgModal);
+$("#btnBgClose").addEventListener("click", () => bgModal.close("cancel"));
+$("#btnBgCancel").addEventListener("click", () => bgModal.close("cancel"));
+
+/* xem trước độ tối / độ mờ theo thời gian thực */
+bgDim.addEventListener("input", () => {
+  bgDimVal.textContent = `${bgDim.value}%`;
+  document.documentElement.style.setProperty("--bg-dim", (bgDim.value / 100).toString());
+});
+bgBlur.addEventListener("input", () => {
+  bgBlurVal.textContent = `${bgBlur.value}px`;
+  document.documentElement.style.setProperty("--bg-blur", `${bgBlur.value}px`);
+});
+
+bgPath.addEventListener("input", () => setBgPreview(bgPath.value));
+
+bgForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  saveBgSettings({
+    path: bgPath.value.trim(),
+    dim: parseInt(bgDim.value, 10) || 0,
+    blur: parseInt(bgBlur.value, 10) || 0,
+  });
+  applyBackground();
+  bgModal.close("saved");
+});
+
+$("#btnBgRemove").addEventListener("click", () => {
+  saveBgSettings({
+    path: "",
+    dim: parseInt(bgDim.value, 10) || 35,
+    blur: parseInt(bgBlur.value, 10) || 0,
+  });
+  bgPath.value = "";
+  setBgPreview("");
+  applyBackground();
+  bgModal.close("removed");
+});
+
+/* khi huỷ (Esc / Huỷ / ✕): khôi phục dim/blur đã lưu */
+bgModal.addEventListener("close", () => {
+  if (bgModal.returnValue === "saved" || bgModal.returnValue === "removed") return;
+  applyBackground();
+});
+
+applyBackground();

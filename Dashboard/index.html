@@ -11,6 +11,8 @@
 </head>
 
 <body>
+    <div id="bgLayer" aria-hidden="true"></div>
+    <video id="bgVideo" aria-hidden="true" muted loop playsinline></video>
     <header class="topbar">
         <div class="brand">
             <div class="dot"></div>
@@ -31,6 +33,7 @@
             <input id="search" type="search" placeholder="Tìm nhanh…" autocomplete="off" />
             <button id="btnAdd" class="btn">Thêm</button>
             <button id="btnReset" class="btn btn-secondary" title="Khôi phục danh sách mặc định">Reset</button>
+            <button id="btnBg" class="btn btn-secondary" title="Đổi hình nền">Nền</button>
             <button id="btnExport" class="btn btn-secondary">Export</button>
             <button id="btnImport" class="btn btn-secondary">Import</button>
             <input id="importFile" type="file" accept="application/json" hidden />
@@ -90,6 +93,46 @@
                 <div class="spacer"></div>
                 <button class="btn btn-secondary" value="cancel" type="button" id="btnCancel">Huỷ</button>
                 <button class="btn" value="default" type="submit">Lưu</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Modal đổi hình nền -->
+    <dialog id="bgModal" class="modal">
+        <form id="bgForm" method="dialog" class="modal-card">
+            <div class="modal-head">
+                <div class="modal-title">Hình nền</div>
+                <button id="btnBgClose" class="icon-btn" value="cancel" type="button" aria-label="Đóng">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="bg-preview" id="bgPreview">Chưa có ảnh nền</div>
+
+                <label class="field">
+                    <div class="label">Đường dẫn trong thư mục nền</div>
+                    <input id="bgPath" placeholder="./background/bg.mp4" />
+                    <div class="help">Đặt ảnh / GIF / video vào <code>./Dashboard/background/</code> rồi
+                        tham chiếu tại đây. Ví dụ: <code>./background/photo.jpg</code>,
+                        <code>./background/anim.gif</code>, <code>./background/clip.mp4</code>. Video luôn được
+                        tắt tiếng.</div>
+                </label>
+
+                <label class="field">
+                    <div class="label">Độ tối lớp phủ: <span id="bgDimVal">35%</span></div>
+                    <input id="bgDim" type="range" min="0" max="80" step="1" value="35" />
+                </label>
+
+                <label class="field">
+                    <div class="label">Làm mờ: <span id="bgBlurVal">0px</span></div>
+                    <input id="bgBlur" type="range" min="0" max="20" step="1" value="0" />
+                </label>
+            </div>
+
+            <div class="modal-foot">
+                <button id="btnBgRemove" class="btn btn-danger" type="button">Xoá nền</button>
+                <div class="spacer"></div>
+                <button class="btn btn-secondary" type="button" id="btnBgCancel">Huỷ</button>
+                <button class="btn" type="submit" id="btnBgApply">Áp dụng</button>
             </div>
         </form>
     </dialog>

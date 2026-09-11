@@ -17,6 +17,7 @@ Designed for productivity with grouped links, drag & drop, and custom thumbnails
 - Groups with custom ordering (move up / down)
 - Drag & drop to reorder links
 - Custom thumbnails (local images or favicon fallback)
+- Custom background (image, GIF, or muted video) with adjustable dim & blur
 - Uniform card size for a clean layout
 - Instant search across name, URL, and group
 - Persistent storage using localStorage
@@ -65,6 +66,24 @@ You can backup or transfer your dashboard data easily.
 
 ---
 
+## 🖼 Custom Background
+
+Set an image, GIF, or video as the dashboard background.
+
+1. Put your file in the `Dashboard/background/` folder, e.g. `photo.jpg`, `anim.gif`, or `clip.mp4`.
+2. Click **Nền** (Background) in the toolbar.
+3. In **Đường dẫn trong thư mục nền** (path in background folder), enter a relative path such as:
+   - `./background/photo.jpg`
+   - `./background/anim.gif`
+   - `./background/clip.mp4`
+4. Adjust **Độ tối** (dim) and **Làm mờ** (blur) to taste, then **Áp dụng** (Apply).
+
+Notes:
+- Videos are detected by extension (`mp4`, `webm`, `ogv`, `ogg`, `mov`, `m4v`) and always play **autoplay, looped, and muted** (muting is required for browser autoplay).
+- The path (plus dim/blur) is stored in `localStorage`; the files themselves live in `Dashboard/background/`, which is **gitignored** so personal media is never committed.
+
+---
+
 ## 📁 Project Structure
 ```
 newtab-dashboard/
@@ -76,6 +95,9 @@ newtab-dashboard/
 │ ├── gmail.png
 │ ├── notion.png
 │ └── ...
+├── background/ # Local background media (gitignored)
+│ ├── photo.jpg
+│ └── clip.mp4
 ├── icons/ # Extension icons
 │ ├── icon16.png
 │ ├── icon32.png
@@ -103,6 +125,7 @@ Planned improvements:
 - [ ] Drag & drop between groups
 - [ ] Collapse / expand groups
 - [x] Import / export configuration (JSON)
+- [x] Custom background (image / GIF / muted video)
 - [ ] Keyboard shortcuts
 - [ ] Optional sync using browser storage
 - [ ] Firefox support
@@ -119,6 +142,9 @@ A: In the browser’s `localStorage`.
 
 **Q: Can I use local images as thumbnails?**  
 A: Yes. You can reference files in the `thumbs/` folder or use image data URLs.
+
+**Q: Can I use a video as the background?**  
+A: Yes. Drop it in `Dashboard/background/` and reference it (e.g. `./background/clip.mp4`). Videos always play muted and looped.
 
 **Q: Can the New Tab page have a favicon?**  
 A: No. Chrome does not support favicons for overridden New Tab pages.
