@@ -1137,6 +1137,18 @@ body.notes-open {
     var(--bg);
   background-attachment: fixed;
 }
+/* Khi có nền tuỳ chỉnh ở giao diện sáng: dùng LỚP PHỦ SÁNG (trắng mờ) thay vì
+   phủ tối, để tổng thể sáng hơn đúng chất light theme và không che tối video/ảnh
+   nền (z-index:-2). Vẫn phải là opaque-thấp (không dùng --bg đục) nếu không sẽ
+   che kín nền. Độ mờ vẫn theo slider --bg-dim. */
+:root[data-theme="light"] body.has-custom-bg::before {
+  background: linear-gradient(
+    to bottom,
+    rgba(238, 242, 247, calc(var(--bg-dim) * 0.7)),
+    rgba(238, 242, 247, calc(var(--bg-dim) * 1.05))
+  );
+  background-attachment: fixed;
+}
 :root[data-theme="light"] .btn,
 :root[data-theme="light"] .field select,
 :root[data-theme="light"] #sortMode {
@@ -1154,11 +1166,24 @@ body.notes-open {
   border-color: rgba(15, 23, 42, 0.14);
   color: var(--text);
 }
+/* Placeholder mặc định dùng chữ trắng mờ (cho nền tối); ở nền sáng phải đổi sang
+   tối mờ, nếu không sẽ gần như vô hình. */
+:root[data-theme="light"] #search::placeholder,
+:root[data-theme="light"] .field input::placeholder,
+:root[data-theme="light"] .field textarea::placeholder,
+:root[data-theme="light"] .notes-add input::placeholder,
+:root[data-theme="light"] .name-input::placeholder {
+  color: rgba(15, 23, 42, 0.45);
+}
+/* Tile trong suốt (frosted) để thấy nền xuyên qua như giao diện tối. Dùng trắng
+   mờ + blur nền phía sau để giữ chữ tối vẫn đọc rõ trên ảnh/video nền. */
 :root[data-theme="light"] .tile {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 :root[data-theme="light"] .tile:hover {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.68);
   border-color: rgba(15, 23, 42, 0.18);
 }
 :root[data-theme="light"] .thumb {
@@ -1186,11 +1211,16 @@ body.notes-open {
   background: #ffffff;
   color: #0f172a;
 }
-/* Nền tuỳ chỉnh có lớp phủ tối ở cả 2 giao diện. Chỉ các phần NỔI TRỰC TIẾP
-   trên ảnh nền (thanh nhóm + chips) mới dùng chữ sáng; topbar / tile / modal
-   có bề mặt sáng riêng nên GIỮ chữ tối của giao diện sáng để không mất chữ. */
+/* Nền tuỳ chỉnh ở giao diện sáng dùng lớp phủ SÁNG, nên tiêu đề nhóm (chữ trần,
+   không có nền riêng) phải dùng chữ TỐI + quầng sáng để đọc rõ trên nền sáng. */
+:root[data-theme="light"] body.has-custom-bg .group-title {
+  color: #0f172a;
+  text-shadow:
+    0 1px 2px rgba(255, 255, 255, 0.75),
+    0 0 6px rgba(255, 255, 255, 0.55);
+}
+/* Chips + nút thanh nhóm có nền tối tự thân nên GIỮ chữ sáng, đọc tốt trên mọi nền. */
 :root[data-theme="light"] body.has-custom-bg .chip,
-:root[data-theme="light"] body.has-custom-bg .group-title,
 :root[data-theme="light"] body.has-custom-bg .group-count,
 :root[data-theme="light"] body.has-custom-bg .group-move,
 :root[data-theme="light"] body.has-custom-bg .group-toggle {
