@@ -17,7 +17,7 @@
         <div class="brand">
             <div class="dot"></div>
             <div>
-                <div class="title">Welcome Back</div>
+                <div class="title" id="greeting">Welcome Back</div>
                 <div class="subtitle" id="nameArea"></div>
             </div>
         </div>
@@ -30,13 +30,14 @@
         </div>
 
         <div class="actions">
-            <input id="search" type="search" placeholder="Tìm nhanh…" autocomplete="off" />
-            <button id="btnAdd" class="btn">Thêm</button>
-            <button id="btnReset" class="btn btn-secondary" title="Khôi phục danh sách mặc định">Reset</button>
-            <button id="btnBg" class="btn btn-secondary" title="Đổi hình nền">Nền</button>
-            <button id="btnExport" class="btn btn-secondary">Export</button>
-            <button id="btnImport" class="btn btn-secondary">Import</button>
-            <input id="importFile" type="file" accept="application/json" hidden />
+            <input id="search" type="search" placeholder="Tìm nhanh…  ( / )" autocomplete="off" />
+            <select id="sortMode" class="btn btn-secondary" title="Sắp xếp liên kết trong nhóm">
+                <option value="manual">Thủ công</option>
+                <option value="opens">Hay dùng</option>
+            </select>
+            <button id="btnAdd" class="btn" title="Thêm website (N)">Thêm</button>
+            <button id="btnNotes" class="btn btn-secondary" title="Ghi chú / việc cần làm">Ghi chú</button>
+            <button id="btnSettings" class="btn btn-secondary" title="Cài đặt">⚙️ Cài đặt</button>
         </div>
     </header>
     <nav class="chips" id="chips" aria-label="Nhóm"></nav>
@@ -109,12 +110,27 @@
                 <div class="bg-preview" id="bgPreview">Chưa có ảnh nền</div>
 
                 <label class="field">
-                    <div class="label">Đường dẫn trong thư mục nền</div>
-                    <input id="bgPath" placeholder="./background/bg.mp4" />
+                    <div class="label">Đường dẫn ảnh / video (mỗi dòng một đường dẫn)</div>
+                    <textarea id="bgPaths" rows="3"
+                        placeholder="./background/photo.jpg&#10;./background/clip.mp4"></textarea>
                     <div class="help">Đặt ảnh / GIF / video vào <code>./Dashboard/background/</code> rồi
                         tham chiếu tại đây. Ví dụ: <code>./background/photo.jpg</code>,
-                        <code>./background/anim.gif</code>, <code>./background/clip.mp4</code>. Video luôn được
-                        tắt tiếng.</div>
+                        <code>./background/anim.gif</code>, <code>./background/clip.mp4</code>. Nhiều dòng =
+                        nhiều nền. Video luôn được tắt tiếng.</div>
+                </label>
+
+                <label class="field">
+                    <div class="label">Chế độ nhiều nền</div>
+                    <select id="bgMode">
+                        <option value="static">Một nền cố định (dòng đầu)</option>
+                        <option value="random">Ngẫu nhiên mỗi lần mở tab</option>
+                        <option value="rotate">Xoay vòng theo thời gian</option>
+                    </select>
+                </label>
+
+                <label class="field" id="bgIntervalField">
+                    <div class="label">Đổi nền sau mỗi (phút)</div>
+                    <input id="bgInterval" type="number" min="1" max="240" step="1" value="10" />
                 </label>
 
                 <label class="field">
@@ -136,6 +152,45 @@
             </div>
         </form>
     </dialog>
+
+    <!-- Panel cài đặt (side bar) -->
+    <aside id="settingsPanel" class="settings-panel" aria-label="Cài đặt">
+        <div class="settings-head">
+            <div class="settings-title">Cài đặt</div>
+            <button id="btnSettingsClose" class="icon-btn" type="button" aria-label="Đóng">✕</button>
+        </div>
+        <div class="settings-body">
+            <div class="settings-group">
+                <div class="settings-label">Giao diện</div>
+                <button id="btnTheme" class="btn btn-secondary settings-item" title="Đổi giao diện sáng / tối">🌙
+                    Sáng / Tối</button>
+                <button id="btnBg" class="btn btn-secondary settings-item" title="Đổi hình nền">🖼️ Hình nền</button>
+            </div>
+            <div class="settings-group">
+                <div class="settings-label">Dữ liệu</div>
+                <button id="btnExport" class="btn btn-secondary settings-item">⬇️ Export dữ liệu</button>
+                <button id="btnImport" class="btn btn-secondary settings-item">⬆️ Import dữ liệu</button>
+                <button id="btnReset" class="btn btn-secondary settings-item" title="Khôi phục danh sách mặc định">♻️
+                    Khôi phục mặc định</button>
+                <input id="importFile" type="file" accept="application/json" hidden />
+            </div>
+        </div>
+    </aside>
+
+    <!-- Panel ghi chú / việc cần làm -->
+    <aside id="notesPanel" class="notes-panel" aria-label="Ghi chú">
+        <div class="notes-head">
+            <div class="notes-title">Việc cần làm</div>
+            <button id="btnNotesClose" class="icon-btn" type="button" aria-label="Đóng">✕</button>
+        </div>
+        <form id="notesForm" class="notes-add">
+            <input id="notesInput" placeholder="Thêm việc… (Enter)" autocomplete="off" maxlength="200" />
+        </form>
+        <ul id="notesList" class="notes-list"></ul>
+    </aside>
+
+    <!-- Thông báo (toast + hoàn tác) -->
+    <div id="toastHost" class="toast-host" aria-live="polite"></div>
 
     <script src="./app.js"></script>
 </body>

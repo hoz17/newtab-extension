@@ -1,12 +1,16 @@
 const STORAGE_KEY = "newtab_dashboard_links_v1";
 const GROUP_ORDER_KEY = "dashboard_group_order_v1";
 const NAME_KEY = "dashboard_user_name_v1";
+const COLLAPSED_KEY = "dashboard_collapsed_groups_v1";
+const THEME_KEY = "dashboard_theme_v1";
+const NOTES_KEY = "dashboard_notes_v1";
+const SORT_KEY = "dashboard_sort_mode_v1";
 
 const DEFAULT_GROUP = "Mặc định";
 
 const DEFAULT_LINKS = [
-  { id: crypto.randomUUID(), name: "Facebook", url: "https://facebook.com/", thumb: "./thumbs/facebook.png", group: "" },
-  { id: crypto.randomUUID(), name: "Youtube", url: "https://youtube.com/", thumb: "./thumbs/youtube.png", group: "" },
+  { id: crypto.randomUUID(), name: "Facebook", url: "https://facebook.com/", thumb: "./thumbs/facebook.png", group: "", opens: 0 },
+  { id: crypto.randomUUID(), name: "Youtube", url: "https://youtube.com/", thumb: "./thumbs/youtube.png", group: "", opens: 0 },
 ];
 
 const $ = (sel) => document.querySelector(sel);
@@ -15,6 +19,7 @@ const grid = $("#grid");
 const search = $("#search");
 const btnAdd = $("#btnAdd");
 const btnReset = $("#btnReset");
+const sortMode = $("#sortMode");
 
 const modal = $("#modal");
 const form = $("#form");
@@ -31,6 +36,7 @@ const fGroup = $("#fGroup");
 const chips = $("#chips");
 const clockTime = $("#clockTime");
 const clockDate = $("#clockDate");
+const greetingEl = $("#greeting");
 
 let dragId = null;
 
@@ -44,7 +50,7 @@ function groupOf(x) {
 function slugify(s) {
   return (s || "")
     .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
@@ -66,6 +72,41 @@ function normalizeUrl(u) {
   if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(t)) return t;
   if (/^[\w.-]+\.[a-zA-Z]{2,}/.test(t)) return `https://${t}`;
   return t;
+}
+
+/* -------------------- toast + hoàn tác -------------------- */
+
+const toastHost = $("#toastHost");
+
+function showToast(msg, actionLabel, onAction, duration = 6000) {
+  if (!toastHost) return;
+
+  const toast = document.createElement("div");
+  toast.className = "toast";
+
+  const text = document.createElement("span");
+  text.textContent = msg;
+  toast.appendChild(text);
+
+  let timer = null;
+  const dismiss = () => {
+    if (timer) clearTimeout(timer);
+    toast.remove();
+  };
+
+  if (actionLabel && typeof onAction === "function") {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = actionLabel;
+    btn.addEventListener("click", () => {
+      dismiss();
+      onAction();
+    });
+    toast.appendChild(btn);
+  }
+
+  toastHost.appendChild(toast);
+  timer = setTimeout(dismiss, duration);
 }
 
 /* -------------------- clock -------------------- */
@@ -96,6 +137,21 @@ function startClock() {
   setInterval(update, 1000);
 }
 
+/* -------------------- greeting theo giờ -------------------- */
+
+function greetingText() {
+  const h = new Date().getHours();
+  if (h < 11) return "Chào buổi sáng";
+  if (h < 14) return "Chào buổi trưa";
+  if (h < 18) return "Chào buổi chiều";
+  return "Chào buổi tối";
+}
+
+function updateGreeting() {
+  if (!greetingEl) return;
+  greetingEl.textContent = greetingText();
+}
+
 /* -------------------- storage: links -------------------- */
 
 function loadLinks() {
@@ -103,14 +159,21 @@ function loadLinks() {
     const raw = localStorage.getItem(STORAGE_KEY);
     const arr = raw ? JSON.parse(raw) : structuredClone(DEFAULT_LINKS);
     if (!Array.isArray(arr)) return structuredClone(DEFAULT_LINKS);
-    return arr.map(x => ({ ...x, group: groupOf(x) }));
+    return arr.map(x => ({ ...x, group: groupOf(x), opens: Number(x.opens) || 0 }));
   } catch {
-    return structuredClone(DEFAULT_LINKS).map(x => ({ ...x, group: groupOf(x) }));
+    return structuredClone(DEFAULT_LINKS).map(x => ({ ...x, group: groupOf(x), opens: 0 }));
   }
 }
 
 function saveLinks(links) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
+}
+
+function persistAndRender() {
+  saveLinks(links);
+  syncGroupOrder(links);
+  renderChips(links);
+  renderGrouped(links);
 }
 
 /* -------------------- storage: user name -------------------- */
@@ -219,6 +282,57 @@ function syncGroupOrder(links) {
   saveGroupOrder(groupOrder);
 }
 
+/* -------------------- storage: collapse group -------------------- */
+
+function loadCollapsedSet() {
+  try {
+    const raw = localStorage.getItem(COLLAPSED_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveCollapsed(set) {
+  localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...set]));
+}
+
+let collapsedGroups = loadCollapsedSet();
+
+function toggleCollapse(groupName) {
+  if (collapsedGroups.has(groupName)) collapsedGroups.delete(groupName);
+  else collapsedGroups.add(groupName);
+  saveCollapsed(collapsedGroups);
+  renderGrouped(links);
+}
+
+/* -------------------- storage: sort mode -------------------- */
+
+function loadSortMode() {
+  try {
+    const v = localStorage.getItem(SORT_KEY);
+    return v === "opens" ? "opens" : "manual";
+  } catch {
+    return "manual";
+  }
+}
+
+function saveSortMode(mode) {
+  localStorage.setItem(SORT_KEY, mode);
+}
+
+let sortModeValue = loadSortMode();
+
+/* -------------------- đếm số lần mở link -------------------- */
+
+function bumpOpen(id) {
+  const item = links.find(x => x.id === id);
+  if (!item) return;
+  item.opens = (Number(item.opens) || 0) + 1;
+  saveLinks(links);
+}
+
 /* -------------------- UI: chips (scroll to group) -------------------- */
 
 function renderChips(links) {
@@ -267,6 +381,40 @@ function moveGroup(name, dir) {
   renderGrouped(links);
 }
 
+/* -------------------- drag & drop: reorder + đổi group -------------------- */
+
+// thả lên một tile khác: chèn trước tile đó, nhận group của tile đích
+function handleDropOnItem(fromId, toId) {
+  if (!fromId || !toId || fromId === toId) return;
+
+  const fromIndex = links.findIndex(x => x.id === fromId);
+  const toIndex = links.findIndex(x => x.id === toId);
+  if (fromIndex < 0 || toIndex < 0) return;
+
+  const targetGroup = groupOf(links[toIndex]);
+  const [moved] = links.splice(fromIndex, 1);
+  moved.group = targetGroup;
+
+  // tính lại vị trí đích sau khi splice
+  const newToIndex = links.findIndex(x => x.id === toId);
+  links.splice(newToIndex, 0, moved);
+
+  persistAndRender();
+}
+
+// thả vào vùng trống của group (không trúng tile nào): chuyển sang group đó, đặt cuối
+function handleDropOnGroup(fromId, groupName) {
+  if (!fromId) return;
+  const fromIndex = links.findIndex(x => x.id === fromId);
+  if (fromIndex < 0) return;
+
+  const [moved] = links.splice(fromIndex, 1);
+  moved.group = groupName;
+  links.push(moved);
+
+  persistAndRender();
+}
+
 /* -------------------- render grouped -------------------- */
 
 function renderGrouped(links) {
@@ -280,6 +428,9 @@ function renderGrouped(links) {
       groupOf(x).toLowerCase().includes(q)
     );
 
+  // chỉ cho kéo-thả khi không tìm kiếm và đang ở chế độ thủ công
+  const canDrag = !q && sortModeValue === "manual";
+
   // group -> items
   const grouped = new Map();
   for (const item of view) {
@@ -291,12 +442,38 @@ function renderGrouped(links) {
   grid.innerHTML = "";
 
   for (const groupName of groupOrder) {
-    const items = grouped.get(groupName) || [];
+    let items = grouped.get(groupName) || [];
     if (q && items.length === 0) continue; // khi search, ẩn group rỗng
 
+    // sắp xếp "hay dùng"
+    if (sortModeValue === "opens") {
+      items = [...items].sort((a, b) => (Number(b.opens) || 0) - (Number(a.opens) || 0));
+    }
+
+    // khi tìm kiếm luôn mở rộng để thấy kết quả
+    const isCollapsed = !q && collapsedGroups.has(groupName);
+
     const section = document.createElement("section");
-    section.className = "group-section";
+    section.className = "group-section" + (isCollapsed ? " collapsed" : "");
     section.id = `group-${slugify(groupName)}`;
+
+    // cho phép thả link vào group (kể cả group rỗng)
+    if (canDrag) {
+      section.addEventListener("dragover", (e) => {
+        if (!dragId) return;
+        e.preventDefault();
+        section.classList.add("drop-target");
+      });
+      section.addEventListener("dragleave", (e) => {
+        if (e.target === section) section.classList.remove("drop-target");
+      });
+      section.addEventListener("drop", (e) => {
+        e.preventDefault();
+        section.classList.remove("drop-target");
+        const fromId = dragId || e.dataTransfer.getData("text/plain");
+        handleDropOnGroup(fromId, groupName);
+      });
+    }
 
     // header
     const header = document.createElement("div");
@@ -305,9 +482,23 @@ function renderGrouped(links) {
     const left = document.createElement("div");
     left.className = "group-left";
 
+    const toggle = document.createElement("button");
+    toggle.className = "group-toggle";
+    toggle.type = "button";
+    toggle.textContent = "▾";
+    toggle.title = isCollapsed ? "Mở rộng nhóm" : "Thu gọn nhóm";
+    toggle.setAttribute("aria-expanded", String(!isCollapsed));
+    toggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      toggleCollapse(groupName);
+    });
+    left.appendChild(toggle);
+
     const title = document.createElement("div");
     title.className = "group-title";
     title.textContent = groupName;
+    title.title = "Nhấn để thu gọn / mở rộng";
+    title.addEventListener("click", () => toggleCollapse(groupName));
     left.appendChild(title);
 
     const right = document.createElement("div");
@@ -355,11 +546,11 @@ function renderGrouped(links) {
       tile.className = "tile";
       tile.dataset.id = item.id;
 
-      // drag only when not searching (tránh reorder theo view lọc)
-      tile.draggable = !q;
+      // drag chỉ khi cho phép (không search, chế độ thủ công)
+      tile.draggable = canDrag;
 
       tile.addEventListener("dragstart", (e) => {
-        if (q) return;
+        if (!canDrag) return;
         dragId = item.id;
         tile.classList.add("dragging");
         e.dataTransfer.effectAllowed = "move";
@@ -370,10 +561,11 @@ function renderGrouped(links) {
         tile.classList.remove("dragging");
         dragId = null;
         document.querySelectorAll(".tile.drag-over").forEach(el => el.classList.remove("drag-over"));
+        document.querySelectorAll(".group-section.drop-target").forEach(el => el.classList.remove("drop-target"));
       });
 
       tile.addEventListener("dragover", (e) => {
-        if (q) return;
+        if (!canDrag) return;
         e.preventDefault();
         if (tile.dataset.id === dragId) return;
         tile.classList.add("drag-over");
@@ -382,29 +574,23 @@ function renderGrouped(links) {
       tile.addEventListener("dragleave", () => tile.classList.remove("drag-over"));
 
       tile.addEventListener("drop", (e) => {
-        if (q) return;
+        if (!canDrag) return;
         e.preventDefault();
+        e.stopPropagation(); // tránh section drop bắt lại
         tile.classList.remove("drag-over");
 
         const fromId = dragId || e.dataTransfer.getData("text/plain");
         const toId = tile.dataset.id;
-        if (!fromId || !toId || fromId === toId) return;
-
-        const fromIndex = links.findIndex(x => x.id === fromId);
-        const toIndex = links.findIndex(x => x.id === toId);
-        if (fromIndex < 0 || toIndex < 0) return;
-
-        const [moved] = links.splice(fromIndex, 1);
-        links.splice(toIndex, 0, moved);
-
-        saveLinks(links);
-        syncGroupOrder(links);
-        renderChips(links);
-        renderGrouped(links);
+        handleDropOnItem(fromId, toId);
       });
 
       const a = document.createElement("a");
       a.href = item.url;
+
+      // đếm số lần mở
+      const onOpen = () => bumpOpen(item.id);
+      a.addEventListener("click", onOpen);
+      a.addEventListener("auxclick", (e) => { if (e.button === 1) onOpen(); });
 
       const thumbWrap = document.createElement("div");
       thumbWrap.className = "thumb";
@@ -436,7 +622,9 @@ function renderGrouped(links) {
 
       const small = document.createElement("div");
       small.className = "small";
-      small.textContent = hostnameOf(item.url) || item.url || "";
+      const host = hostnameOf(item.url) || item.url || "";
+      const opens = Number(item.opens) || 0;
+      small.textContent = opens > 0 ? `${host} · ${opens} lượt` : host;
 
       leftMeta.appendChild(name);
       leftMeta.appendChild(small);
@@ -498,19 +686,32 @@ function openEdit(item) {
 
 let links = loadLinks();
 syncGroupOrder(links);
+if (sortMode) sortMode.value = sortModeValue;
 renderChips(links);
 renderGrouped(links);
 renderName();
 startClock();
+updateGreeting();
+setInterval(updateGreeting, 60000);
 
 search.addEventListener("input", () => renderGrouped(links));
 
+if (sortMode) {
+  sortMode.addEventListener("change", () => {
+    sortModeValue = sortMode.value === "opens" ? "opens" : "manual";
+    saveSortMode(sortModeValue);
+    renderGrouped(links);
+  });
+}
+
 btnReset.addEventListener("click", () => {
-  links = structuredClone(DEFAULT_LINKS).map(x => ({ ...x, group: groupOf(x) }));
-  saveLinks(links);
-  syncGroupOrder(links);
-  renderChips(links);
-  renderGrouped(links);
+  const prev = structuredClone(links);
+  links = structuredClone(DEFAULT_LINKS).map(x => ({ ...x, group: groupOf(x), opens: 0 }));
+  persistAndRender();
+  showToast("Đã khôi phục danh sách mặc định.", "Hoàn tác", () => {
+    links = prev;
+    persistAndRender();
+  });
 });
 
 btnAdd.addEventListener("click", () => openAdd());
@@ -522,13 +723,19 @@ btnDelete.addEventListener("click", () => {
   const id = fId.value;
   if (!id) return;
 
-  links = links.filter(x => x.id !== id);
-  saveLinks(links);
+  const idx = links.findIndex(x => x.id === id);
+  if (idx < 0) { modal.close("cancel"); return; }
 
+  const removed = links[idx];
+  links.splice(idx, 1);
+  persistAndRender();
   modal.close("deleted");
-  syncGroupOrder(links);
-  renderChips(links);
-  renderGrouped(links);
+
+  showToast(`Đã xoá “${removed.name || "liên kết"}”.`, "Hoàn tác", () => {
+    const at = Math.min(idx, links.length);
+    links.splice(at, 0, removed);
+    persistAndRender();
+  });
 });
 
 form.addEventListener("submit", (e) => {
@@ -540,19 +747,17 @@ form.addEventListener("submit", (e) => {
   const thumb = (fThumb.value || "").trim();
   const group = (fGroup.value || "").trim() || DEFAULT_GROUP;
 
-  const updated = { id, name, url, thumb, group };
-
   const idx = links.findIndex(x => x.id === id);
+  const prevOpens = idx >= 0 ? (Number(links[idx].opens) || 0) : 0;
+  const updated = { id, name, url, thumb, group, opens: prevOpens };
+
   if (idx >= 0) links[idx] = updated;
   else links.unshift(updated);
 
-  saveLinks(links);
-
+  persistAndRender();
   modal.close("saved");
-  syncGroupOrder(links);
-  renderChips(links);
-  renderGrouped(links);
 });
+
 const btnExport = document.querySelector("#btnExport");
 const btnImport = document.querySelector("#btnImport");
 const importFile = document.querySelector("#importFile");
@@ -578,6 +783,7 @@ btnExport.addEventListener("click", () => {
   a.click();
   URL.revokeObjectURL(url);
 });
+
 btnImport.addEventListener("click", () => {
   importFile.value = "";
   importFile.click();
@@ -592,55 +798,255 @@ importFile.addEventListener("change", async () => {
     const data = JSON.parse(text);
 
     if (!Array.isArray(data.links)) {
-      alert("Invalid backup file");
+      alert("File sao lưu không hợp lệ.");
       return;
     }
+
+    // chống mất dữ liệu: xác nhận trước khi ghi đè
+    const hasData = links.length > 0;
+    if (hasData) {
+      const ok = confirm(
+        `Nhập sẽ THAY THẾ ${links.length} liên kết hiện có bằng ${data.links.length} liên kết trong file.\n` +
+        `Bạn có thể Hoàn tác ngay sau đó. Tiếp tục?`
+      );
+      if (!ok) return;
+    }
+
+    // snapshot để hoàn tác
+    const prevLinks = structuredClone(links);
+    const prevOrder = structuredClone(groupOrder);
+    const prevName = loadUserName();
 
     links = data.links.map(x => ({
       ...x,
       id: x.id || crypto.randomUUID(),
-      group: (x.group || DEFAULT_GROUP).trim()
+      group: (x.group || DEFAULT_GROUP).trim(),
+      opens: Number(x.opens) || 0
     }));
 
-    groupOrder = Array.isArray(data.groupOrder)
-      ? data.groupOrder
-      : [];
+    groupOrder = Array.isArray(data.groupOrder) ? data.groupOrder : [];
 
-    saveLinks(links);
     saveGroupOrder(groupOrder);
-    syncGroupOrder(links);
 
     if (typeof data.name === "string") {
       saveUserName(data.name);
       renderName();
     }
 
-    renderChips(links);
-    renderGrouped(links);
+    persistAndRender();
 
-    alert("Import successful");
+    showToast("Đã nhập dữ liệu.", "Hoàn tác", () => {
+      links = prevLinks;
+      groupOrder = prevOrder;
+      saveGroupOrder(groupOrder);
+      saveUserName(prevName);
+      renderName();
+      persistAndRender();
+    });
   } catch (err) {
     console.error(err);
-    alert("Failed to import file");
+    alert("Không thể nhập file.");
   }
 });
 
-/* -------------------- background (ảnh / gif / video theo đường dẫn) -------------------- */
+/* -------------------- theme sáng / tối -------------------- */
+
+const btnTheme = $("#btnTheme");
+
+function loadTheme() {
+  try {
+    return localStorage.getItem(THEME_KEY) === "light" ? "light" : "dark";
+  } catch {
+    return "dark";
+  }
+}
+
+function applyTheme(t) {
+  if (t === "light") document.documentElement.dataset.theme = "light";
+  else delete document.documentElement.dataset.theme;
+  if (btnTheme) {
+    btnTheme.textContent = t === "light" ? "☀️" : "🌙";
+    btnTheme.title = t === "light" ? "Chuyển sang giao diện tối" : "Chuyển sang giao diện sáng";
+  }
+}
+
+let themeValue = loadTheme();
+applyTheme(themeValue);
+
+if (btnTheme) {
+  btnTheme.addEventListener("click", () => {
+    themeValue = themeValue === "light" ? "dark" : "light";
+    localStorage.setItem(THEME_KEY, themeValue);
+    applyTheme(themeValue);
+  });
+}
+
+/* -------------------- ghi chú / việc cần làm -------------------- */
+
+const notesPanel = $("#notesPanel");
+const notesForm = $("#notesForm");
+const notesInput = $("#notesInput");
+const notesList = $("#notesList");
+const btnNotes = $("#btnNotes");
+const btnNotesClose = $("#btnNotesClose");
+
+function loadNotes() {
+  try {
+    const raw = localStorage.getItem(NOTES_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveNotes(arr) {
+  localStorage.setItem(NOTES_KEY, JSON.stringify(arr));
+}
+
+let notes = loadNotes();
+
+function renderNotes() {
+  if (!notesList) return;
+  notesList.innerHTML = "";
+
+  if (notes.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "notes-empty";
+    empty.textContent = "Chưa có việc nào. Thêm việc đầu tiên nhé!";
+    notesList.appendChild(empty);
+    return;
+  }
+
+  for (const note of notes) {
+    const li = document.createElement("li");
+    li.className = "note-item" + (note.done ? " done" : "");
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!note.done;
+    cb.addEventListener("change", () => {
+      note.done = cb.checked;
+      saveNotes(notes);
+      renderNotes();
+    });
+
+    const text = document.createElement("div");
+    text.className = "note-text";
+    text.textContent = note.text;
+
+    const del = document.createElement("button");
+    del.className = "note-del";
+    del.type = "button";
+    del.textContent = "✕";
+    del.title = "Xoá việc";
+    del.addEventListener("click", () => {
+      notes = notes.filter(n => n.id !== note.id);
+      saveNotes(notes);
+      renderNotes();
+    });
+
+    li.appendChild(cb);
+    li.appendChild(text);
+    li.appendChild(del);
+    notesList.appendChild(li);
+  }
+}
+
+function openNotes() {
+  if (!notesPanel) return;
+  notesPanel.classList.add("open");
+  document.body.classList.add("notes-open");
+  if (notesInput) notesInput.focus();
+}
+
+function closeNotes() {
+  if (notesPanel) notesPanel.classList.remove("open");
+  document.body.classList.remove("notes-open");
+}
+
+if (btnNotes) btnNotes.addEventListener("click", () => {
+  if (notesPanel && notesPanel.classList.contains("open")) closeNotes();
+  else openNotes();
+});
+if (btnNotesClose) btnNotesClose.addEventListener("click", closeNotes);
+
+/* -------------------- panel cài đặt -------------------- */
+
+const settingsPanel = $("#settingsPanel");
+const btnSettings = $("#btnSettings");
+const btnSettingsClose = $("#btnSettingsClose");
+
+function openSettings() {
+  if (!settingsPanel) return;
+  settingsPanel.classList.add("open");
+  document.body.classList.add("settings-open");
+}
+
+function closeSettings() {
+  if (settingsPanel) settingsPanel.classList.remove("open");
+  document.body.classList.remove("settings-open");
+}
+
+if (btnSettings) btnSettings.addEventListener("click", () => {
+  if (settingsPanel && settingsPanel.classList.contains("open")) closeSettings();
+  else openSettings();
+});
+if (btnSettingsClose) btnSettingsClose.addEventListener("click", closeSettings);
+
+if (notesForm) {
+  notesForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = (notesInput.value || "").trim();
+    if (!text) return;
+    notes.unshift({ id: crypto.randomUUID(), text, done: false });
+    saveNotes(notes);
+    notesInput.value = "";
+    renderNotes();
+  });
+}
+
+renderNotes();
+
+/* -------------------- background (nhiều ảnh: tĩnh / ngẫu nhiên / xoay vòng) -------------------- */
 
 const BG_KEY = "dashboard_background_v1";
 const VIDEO_RE = /\.(mp4|webm|ogv|ogg|mov|m4v)$/i;
 
+let bgRotateTimer = null;
+let bgRotateIndex = 0;
+
 function isVideoPath(p) {
   return VIDEO_RE.test((p || "").trim());
+}
+
+function parsePaths(text) {
+  return (text || "")
+    .split(/\r?\n/)
+    .map(s => s.trim())
+    .filter(Boolean);
 }
 
 function loadBgSettings() {
   try {
     const raw = localStorage.getItem(BG_KEY);
     const s = raw ? JSON.parse(raw) : null;
-    return { path: "", dim: 35, blur: 0, ...(s || {}) };
+
+    // giá trị mặc định
+    const out = { paths: [], mode: "static", intervalMin: 10, dim: 35, blur: 0 };
+    if (s && typeof s === "object") {
+      // di trú từ dạng cũ { path, dim, blur }
+      if (Array.isArray(s.paths)) out.paths = s.paths.filter(Boolean);
+      else if (typeof s.path === "string" && s.path.trim()) out.paths = [s.path.trim()];
+
+      if (s.mode === "random" || s.mode === "rotate" || s.mode === "static") out.mode = s.mode;
+      if (Number.isFinite(s.intervalMin)) out.intervalMin = Math.min(240, Math.max(1, s.intervalMin));
+      if (Number.isFinite(s.dim)) out.dim = s.dim;
+      if (Number.isFinite(s.blur)) out.blur = s.blur;
+    }
+    return out;
   } catch {
-    return { path: "", dim: 35, blur: 0 };
+    return { paths: [], mode: "static", intervalMin: 10, dim: 35, blur: 0 };
   }
 }
 
@@ -648,18 +1054,14 @@ function saveBgSettings(s) {
   localStorage.setItem(BG_KEY, JSON.stringify(s));
 }
 
-function applyBackground() {
-  const s = loadBgSettings();
+function renderBgPath(path) {
   const bgLayer = $("#bgLayer");
   const bgVideo = $("#bgVideo");
   if (!bgLayer || !bgVideo) return;
 
-  document.documentElement.style.setProperty("--bg-dim", (s.dim / 100).toString());
-  document.documentElement.style.setProperty("--bg-blur", `${s.blur}px`);
+  const p = (path || "").trim();
 
-  const path = (s.path || "").trim();
-
-  if (!path) {
+  if (!p) {
     document.body.classList.remove("has-custom-bg", "bg-is-video");
     bgLayer.style.backgroundImage = "";
     bgVideo.removeAttribute("src");
@@ -669,17 +1071,60 @@ function applyBackground() {
 
   document.body.classList.add("has-custom-bg");
 
-  if (isVideoPath(path)) {
+  if (isVideoPath(p)) {
     document.body.classList.add("bg-is-video");
     bgLayer.style.backgroundImage = "";
-    if (bgVideo.getAttribute("src") !== path) bgVideo.src = path;
+    if (bgVideo.getAttribute("src") !== p) bgVideo.src = p;
     bgVideo.muted = true; // luôn tắt tiếng
-    bgVideo.play().catch(() => {}); // autoplay có thể bị hoãn tới khi tab hiển thị
+    bgVideo.play().catch(() => {});
   } else {
     document.body.classList.remove("bg-is-video");
     bgVideo.removeAttribute("src");
     bgVideo.load();
-    bgLayer.style.backgroundImage = `url("${path}")`;
+    bgLayer.style.backgroundImage = `url("${p}")`;
+  }
+}
+
+function pickBgPath(s) {
+  const paths = s.paths || [];
+  if (paths.length === 0) return "";
+  if (paths.length === 1) return paths[0];
+
+  if (s.mode === "random") {
+    return paths[Math.floor(Math.random() * paths.length)];
+  }
+  if (s.mode === "rotate") {
+    return paths[bgRotateIndex % paths.length];
+  }
+  return paths[0]; // static → dòng đầu
+}
+
+function applyBackground() {
+  const s = loadBgSettings();
+
+  document.documentElement.style.setProperty("--bg-dim", (s.dim / 100).toString());
+  document.documentElement.style.setProperty("--bg-blur", `${s.blur}px`);
+
+  // luôn dọn timer cũ
+  if (bgRotateTimer) { clearInterval(bgRotateTimer); bgRotateTimer = null; }
+
+  const paths = s.paths || [];
+
+  if (paths.length === 0) {
+    renderBgPath("");
+    return;
+  }
+
+  if (s.mode === "rotate" && paths.length > 1) {
+    bgRotateIndex = 0;
+    renderBgPath(paths[bgRotateIndex]);
+    const ms = Math.max(1, s.intervalMin) * 60000;
+    bgRotateTimer = setInterval(() => {
+      bgRotateIndex = (bgRotateIndex + 1) % paths.length;
+      renderBgPath(paths[bgRotateIndex]);
+    }, ms);
+  } else {
+    renderBgPath(pickBgPath(s));
   }
 }
 
@@ -687,7 +1132,10 @@ function applyBackground() {
 
 const bgModal = $("#bgModal");
 const bgForm = $("#bgForm");
-const bgPath = $("#bgPath");
+const bgPaths = $("#bgPaths");
+const bgModeSel = $("#bgMode");
+const bgInterval = $("#bgInterval");
+const bgIntervalField = $("#bgIntervalField");
 const bgDim = $("#bgDim");
 const bgBlur = $("#bgBlur");
 const bgDimVal = $("#bgDimVal");
@@ -719,14 +1167,27 @@ function setBgPreview(path) {
   }
 }
 
+function previewFirstPath() {
+  const first = parsePaths(bgPaths.value)[0] || "";
+  setBgPreview(first);
+}
+
+function updateIntervalVisibility() {
+  if (!bgIntervalField) return;
+  bgIntervalField.style.display = (bgModeSel && bgModeSel.value === "rotate") ? "" : "none";
+}
+
 function openBgModal() {
   const s = loadBgSettings();
   bgDim.value = s.dim;
   bgBlur.value = s.blur;
   bgDimVal.textContent = `${s.dim}%`;
   bgBlurVal.textContent = `${s.blur}px`;
-  bgPath.value = s.path || "";
-  setBgPreview(s.path);
+  bgPaths.value = (s.paths || []).join("\n");
+  if (bgModeSel) bgModeSel.value = s.mode;
+  if (bgInterval) bgInterval.value = s.intervalMin;
+  updateIntervalVisibility();
+  previewFirstPath();
   bgModal.showModal();
 }
 
@@ -744,12 +1205,15 @@ bgBlur.addEventListener("input", () => {
   document.documentElement.style.setProperty("--bg-blur", `${bgBlur.value}px`);
 });
 
-bgPath.addEventListener("input", () => setBgPreview(bgPath.value));
+bgPaths.addEventListener("input", previewFirstPath);
+if (bgModeSel) bgModeSel.addEventListener("change", updateIntervalVisibility);
 
 bgForm.addEventListener("submit", (e) => {
   e.preventDefault();
   saveBgSettings({
-    path: bgPath.value.trim(),
+    paths: parsePaths(bgPaths.value),
+    mode: bgModeSel ? bgModeSel.value : "static",
+    intervalMin: bgInterval ? (parseInt(bgInterval.value, 10) || 10) : 10,
     dim: parseInt(bgDim.value, 10) || 0,
     blur: parseInt(bgBlur.value, 10) || 0,
   });
@@ -759,11 +1223,13 @@ bgForm.addEventListener("submit", (e) => {
 
 $("#btnBgRemove").addEventListener("click", () => {
   saveBgSettings({
-    path: "",
+    paths: [],
+    mode: bgModeSel ? bgModeSel.value : "static",
+    intervalMin: bgInterval ? (parseInt(bgInterval.value, 10) || 10) : 10,
     dim: parseInt(bgDim.value, 10) || 35,
     blur: parseInt(bgBlur.value, 10) || 0,
   });
-  bgPath.value = "";
+  bgPaths.value = "";
   setBgPreview("");
   applyBackground();
   bgModal.close("removed");
@@ -776,3 +1242,63 @@ bgModal.addEventListener("close", () => {
 });
 
 applyBackground();
+
+/* -------------------- phím tắt -------------------- */
+
+function isTypingTarget(el) {
+  if (!el) return false;
+  const tag = el.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable;
+}
+
+document.addEventListener("keydown", (e) => {
+  const anyModalOpen = (modal && modal.open) || (bgModal && bgModal.open);
+
+  // Esc: đóng panel cài đặt / ghi chú / xoá nội dung tìm kiếm
+  if (e.key === "Escape") {
+    if (settingsPanel && settingsPanel.classList.contains("open")) {
+      closeSettings();
+      return;
+    }
+    if (notesPanel && notesPanel.classList.contains("open")) {
+      closeNotes();
+      return;
+    }
+    if (document.activeElement === search && search.value) {
+      search.value = "";
+      renderGrouped(links);
+      return;
+    }
+    return;
+  }
+
+  // các phím còn lại: bỏ qua khi đang gõ hoặc có modal mở
+  if (anyModalOpen) return;
+
+  // Enter trong ô tìm kiếm: mở kết quả đầu tiên
+  if (e.key === "Enter" && document.activeElement === search) {
+    const first = grid.querySelector(".tile a[href]");
+    if (first) {
+      bumpOpen(first.closest(".tile").dataset.id);
+      window.location.href = first.href;
+    }
+    return;
+  }
+
+  if (isTypingTarget(document.activeElement)) return;
+
+  // "/" hoặc Ctrl/Cmd+K: focus ô tìm kiếm
+  if (e.key === "/" || ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K"))) {
+    e.preventDefault();
+    search.focus();
+    search.select();
+    return;
+  }
+
+  // "n": thêm website
+  if (e.key === "n" || e.key === "N") {
+    e.preventDefault();
+    openAdd();
+    return;
+  }
+});
