@@ -55,4 +55,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
-Dashboard\thumbs
+
+# Dashboard thumbnails (local/personal)
+Dashboard/thumbs/
