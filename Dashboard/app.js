@@ -1,5 +1,6 @@
 const STORAGE_KEY = "newtab_dashboard_links_v1";
 const GROUP_ORDER_KEY = "dashboard_group_order_v1";
+const NAME_KEY = "dashboard_user_name_v1";
 
 const DEFAULT_GROUP = "Mặc định";
 
@@ -110,6 +111,75 @@ function loadLinks() {
 
 function saveLinks(links) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
+}
+
+/* -------------------- storage: user name -------------------- */
+
+function loadUserName() {
+  try {
+    return (localStorage.getItem(NAME_KEY) || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+function saveUserName(name) {
+  localStorage.setItem(NAME_KEY, (name || "").trim());
+}
+
+/* -------------------- UI: user name (top-left) -------------------- */
+
+const nameArea = $("#nameArea");
+
+function renderName() {
+  const name = loadUserName();
+  if (name) renderNameDisplay(name);
+  else renderNameEditor("", false); // chưa có tên → hiện phần đặt tên
+}
+
+function renderNameDisplay(name) {
+  if (!nameArea) return;
+  nameArea.innerHTML = "";
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "name-display";
+  btn.textContent = name;
+  btn.title = "Đổi tên";
+  btn.addEventListener("click", () => renderNameEditor(name, true));
+
+  nameArea.appendChild(btn);
+}
+
+function renderNameEditor(current, autofocus) {
+  if (!nameArea) return;
+  nameArea.innerHTML = "";
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "name-input";
+  input.placeholder = "Nhập tên của bạn…";
+  input.value = current || "";
+  input.maxLength = 40;
+
+  const commit = () => {
+    const val = input.value.trim();
+    if (val) saveUserName(val);
+    renderName();
+  };
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); commit(); }
+    else if (e.key === "Escape") { e.preventDefault(); renderName(); }
+  });
+  input.addEventListener("blur", commit);
+
+  nameArea.appendChild(input);
+
+  if (autofocus) {
+    input.focus();
+    input.select();
+  }
 }
 
 /* -------------------- storage: group order -------------------- */
@@ -430,6 +500,7 @@ let links = loadLinks();
 syncGroupOrder(links);
 renderChips(links);
 renderGrouped(links);
+renderName();
 startClock();
 
 search.addEventListener("input", () => renderGrouped(links));
@@ -490,6 +561,7 @@ btnExport.addEventListener("click", () => {
   const data = {
     version: 1,
     exportedAt: new Date().toISOString(),
+    name: loadUserName(),
     links,
     groupOrder
   };
@@ -537,6 +609,11 @@ importFile.addEventListener("change", async () => {
     saveLinks(links);
     saveGroupOrder(groupOrder);
     syncGroupOrder(links);
+
+    if (typeof data.name === "string") {
+      saveUserName(data.name);
+      renderName();
+    }
 
     renderChips(links);
     renderGrouped(links);
