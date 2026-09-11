@@ -953,11 +953,11 @@ function renderNotes() {
   }
 }
 
-function openNotes() {
+function openNotes(focusInput = true) {
   if (!notesPanel) return;
   notesPanel.classList.add("open");
   document.body.classList.add("notes-open");
-  if (notesInput) notesInput.focus();
+  if (focusInput && notesInput) notesInput.focus();
 }
 
 function closeNotes() {
@@ -1007,6 +1007,12 @@ if (notesForm) {
 }
 
 renderNotes();
+
+// Khi mở tab mới: nếu còn việc chưa hoàn thành thì tự động mở panel việc cần làm.
+// Không focus ô nhập để không chiếm ô tìm kiếm.
+if (notes.some(n => !n.done)) {
+  openNotes(false);
+}
 
 /* -------------------- background (nhiều ảnh: tĩnh / ngẫu nhiên / xoay vòng) -------------------- */
 

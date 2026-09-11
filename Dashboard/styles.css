@@ -161,8 +161,8 @@ body {
   justify-content: flex-end;
 }
 #search {
-  flex: 1;
-  min-width: 180px;
+  flex: 1 1 120px;
+  min-width: 120px;
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -815,9 +815,8 @@ body.has-custom-bg::before {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px var(--accent-soft);
 }
-.actions {
-  flex-wrap: wrap;
-}
+/* Toolbar giữ 1 hàng ở desktop; chỉ xuống hàng ở mobile (xem media query 760px)
+   để header không bị cao thêm khi mở cả 2 panel. */
 #sortMode {
   appearance: none;
   -webkit-appearance: none;
@@ -1097,6 +1096,11 @@ body.notes-open {
   .settings-panel,
   .notes-panel {
     width: 86vw;
+  }
+  /* Màn hình hẹp: cho phép nhóm nút xuống hàng thay vì tràn ngang. */
+  .actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 }
 
